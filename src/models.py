@@ -9,15 +9,20 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name= db.Column(db.String(120),nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    hashed_password = db.Column(db.String(80), unique=False, nullable=False)    
+    hashed_password = db.Column(db.String(200), unique=False, nullable=False)    
     salt=db.Column(db.String(200),nullable=False)
     sales=db.relationship("Sale",backref="user")
+
+    def set_password(self,password):
+        return generate_password_hash(
+            f"{password}{self.salt}"
+        )
 
     def __init__(self,body):
         self.name=body['name']
         self.email=body['email']
         self.salt=b64encode(os.urandom(4)).decode("utf-8")
-        self.hashed_password=set_password(body['password'])
+        self.hashed_password= self.set_password(body['password'])
 
     @classmethod
     def create(cls,**kwargs):
@@ -26,10 +31,7 @@ class User(db.Model):
         db.session.commit()
         return new_user
 
-    def set_password(self,password):
-        return generate_password_hash(
-            f"{password}{self.salt}"
-        )
+
 
     def check_password(self, password):
         print(f"este es el password:{password}")
@@ -48,9 +50,9 @@ class User(db.Model):
     
 class Sale(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    date= db.Column(db.Integer(120),nullable=False)
-    description=db.Column(db.String(120), unique=True, nullable=False)
-    money_USD = db.Column(db.String(120), unique=True, nullable=False)
+    date= db.Column(db.String(120),nullable=False)
+    description=db.Column(db.String(120), nullable=False)
+    money_USD = db.Column(db.String(120), nullable=False)
 
     user_id=db.Column(db.Integer, db.ForeignKey('user.id'))
 
@@ -73,6 +75,6 @@ class Sale(db.Model):
             "id": self.id,
             "date":self.date,
             "description": self.description,
-            "money_USD"=self.money_USD
+            "money_USD":self.money_USD
             # do not serialize the password, its a security breach
         }

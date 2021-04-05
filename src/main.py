@@ -23,6 +23,7 @@ MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
 setup_admin(app)
+jwt = JWTManager(app)
 
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
@@ -39,7 +40,7 @@ def sitemap():
 def handle_users():
     users=User.query.all()
     response_body=[]
-    for user in body:
+    for user in users:
         response_body.append(user.serialize())
 
     return jsonify(response_body), 200
@@ -121,13 +122,14 @@ def add_new_sale():
             raise APIException("You need to specify the id user", status_code=400)
 
     else: return "error in body, is not a dictionary"
-    task1 = Task.create(
+    sale1 = Sale.create(
         date=body['date'],
         user_id=body['user_id'],
         description=body['description'],
         money_USD=body['money_USD'])
-    return task1.serialize(), 200
+    return sale1.serialize(), 200
 
+#endpoint para ver todas las ventas de un usuario
 @app.route('/sales/<int:id>',methods=["GET"])
 def all_sales(id):
     user=User.query.get(id)
